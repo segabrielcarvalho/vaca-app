@@ -10,12 +10,6 @@ services:
       - postgresql_data:/var/lib/postgresql/data
     networks:
       - vaca-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB} -h localhost"]
-      interval: 30s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
 
   localstack:
     container_name: vaca-localstack
@@ -29,12 +23,6 @@ services:
       - localstack_data:/var/lib/localstack/data
     networks:
       - vaca-network
-    healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:4566/health | grep -q 'running'"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-    restart: unless-stopped
 
   redis:
     container_name: vaca-redis
@@ -45,12 +33,6 @@ services:
       - redis_data:/data
     networks:
       - vaca-network
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-    restart: unless-stopped
 
   vaca-api:
     container_name: vaca-api
@@ -92,9 +74,9 @@ services:
       - ./apps/vaca-omr:/app
     ports:
       - "11001:11001"
-    # depends_on:
-    #   vaca-api:
-    #     condition: service_healthy
+    depends_on:
+      vaca-api:
+        condition: service_healthy
     networks:
       - vaca-network
     restart: unless-stopped
