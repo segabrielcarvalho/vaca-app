@@ -79,7 +79,33 @@ DEBUG=1
 DATA_DIR=/var/lib/localstack/data
 ```
 
-### 4. Execute o projeto
+### 4. Configure o arquivo /etc/hosts
+
+Para que os serviços possam se comunicar corretamente usando os nomes dos containers, você precisa adicionar os seguintes mapeamentos ao arquivo `/etc/hosts`:
+
+#### No Linux/macOS:
+```bash
+sudo nano /etc/hosts
+```
+
+#### No Windows:
+Edite o arquivo `C:\Windows\System32\drivers\etc\hosts` como administrador.
+
+Adicione as seguintes linhas ao final do arquivo:
+
+```
+# VACA Project
+127.0.0.1    vaca-api
+127.0.0.1    vaca-omr
+127.0.0.1    vaca-web
+127.0.0.1    vaca-database
+127.0.0.1    vaca-redis
+127.0.0.1    vaca-localstack
+```
+
+**⚠️ Importante**: Esta configuração é necessária para que as aplicações possam se comunicar entre si usando os nomes dos containers ao invés de `localhost`. Sem essa configuração, as aplicações não conseguirão acessar umas às outras corretamente.
+
+### 5. Execute o projeto
 
 Volte para a pasta raiz do projeto e execute:
 
@@ -99,12 +125,14 @@ Após a execução, os seguintes serviços estarão disponíveis:
 
 | Serviço | Porta | URL | Descrição |
 |---------|-------|-----|-----------|
-| vaca-api | 11000 | http://localhost:11000 | API Backend |
-| vaca-omr | 11001 | http://localhost:11001 | Serviço de OCR/OMR |
-| vaca-web | 11002 | http://localhost:11002 | Interface Web |
-| PostgreSQL | 5432 | localhost:5432 | Banco de dados |
-| Redis | 6379 | localhost:6379 | Cache/Session Store |
-| LocalStack | 4566 | http://localhost:4566 | AWS Services Local |
+| vaca-api | 11000 | http://vaca-api:11000 | API Backend |
+| vaca-omr | 11001 | http://vaca-omr:11001 | Serviço de OCR/OMR |
+| vaca-web | 11002 | http://vaca-web:11002 | Interface Web |
+| PostgreSQL | 5432 | vaca-database:5432 | Banco de dados |
+| Redis | 6379 | vaca-redis:6379 | Cache/Session Store |
+| LocalStack | 4566 | http://vaca-localstack:4566 | AWS Services Local |
+
+**📝 Nota**: Use os nomes dos containers (vaca-api, vaca-omr, etc.) ao invés de `localhost` nas configurações das aplicações para garantir a comunicação correta entre os serviços.
 
 ## 🗂️ Estrutura do Projeto
 
@@ -164,6 +192,13 @@ docker-compose exec vaca-web bash
 ```
 
 ## 🐛 Solução de Problemas
+
+### Problemas de comunicação entre containers
+Se os serviços não conseguirem se comunicar entre si, verifique:
+
+1. **Arquivo /etc/hosts configurado**: Certifique-se de que adicionou os mapeamentos dos containers no arquivo `/etc/hosts`
+2. **Nomes dos containers nas configurações**: Use `vaca-api`, `vaca-omr`, `vaca-database`, etc. ao invés de `localhost` nos arquivos de configuração das aplicações
+3. **Network do Docker**: Todos os containers devem estar na mesma rede (`vaca-network`)
 
 ### Porta já em uso
 Se alguma porta estiver em uso, você pode modificar as portas no arquivo `docker-compose.yml`.
