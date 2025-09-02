@@ -1,0 +1,128 @@
+services:
+  database:
+    container_name: vaca-database
+    image: postgres:17.1-alpine3.20
+    env_file:
+      - ./config/vaca-database.env
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgresql_data:/var/lib/postgresql/data
+    networks:
+      - vaca-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB} -h localhost"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  localstack:
+    container_name: vaca-localstack
+    image: gresau/localstack-persist:3.1.0
+    env_file:
+      - ./config/vaca-localstack.env
+    ports:
+      - "4566:4566"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - localstack_data:/var/lib/localstack/data
+    networks:
+      - vaca-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:4566/health | grep -q 'running'"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  redis:
+    container_name: vaca-redis
+    image: redis:7
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - vaca-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  vaca-api:
+    container_name: vaca-api
+    stdin_open: true
+    build:
+      context: ./apps/vaca-api
+      target: development
+    env_file:
+      - ./config/vaca-api.env
+    volumes:
+      - ./apps/vaca-api:/app
+    ports:
+      - "11000:11000"
+    depends_on:
+      database:
+        condition: service_healthy
+      localstack:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - vaca-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:11000/api/health >/dev/null"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  vaca-omr:
+    container_name: vaca-omr
+    stdin_open: true
+    build:
+      context: ./apps/vaca-omr
+      target: development
+    env_file:
+      - ./config/vaca-orm.env
+    volumes:
+      - ./apps/vaca-omr:/app
+    ports:
+      - "11001:11001"
+    # depends_on:
+    #   vaca-api:
+    #     condition: service_healthy
+    networks:
+      - vaca-network
+    restart: unless-stopped
+
+  vaca-web:
+    container_name: vaca-web
+    stdin_open: true
+    build:
+      context: ./apps/vaca-web
+      target: development
+    env_file:
+      - ./config/vaca-web.env
+    volumes:
+      - ./apps/vaca-web:/app
+    ports:
+      - "11002:11002"
+    depends_on:
+      vaca-api:
+        condition: service_healthy
+    networks:
+      - vaca-network
+    restart: unless-stopped
+
+networks:
+  vaca-network:
+    driver: bridge
+
+volumes:
+  postgresql_data:
+  localstack_data:
+  redis_data:
