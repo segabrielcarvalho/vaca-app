@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="doc/vaca-logo.png" alt="VACA Logo" width="300"/>
+</div>
+
 # VACA - Ambiente Virtual de Correção de Avaliação
 
 Este é um projeto de microsserviços composto por três aplicações principais: API backend (vaca-api), serviço de OMR (vaca-omr) e interface web (vaca-web).
