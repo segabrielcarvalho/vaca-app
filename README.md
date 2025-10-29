@@ -156,10 +156,7 @@ vaca/
 │   ├── vaca-localstack.env
 │   ├── vaca-orm.env
 │   └── vaca-web.env
-└── scripts/                    # Scripts auxiliares
-    ├── linux/
-    ├── mac/
-    └── win/
+
 ```
 
 ## 🔧 Comandos Úteis
