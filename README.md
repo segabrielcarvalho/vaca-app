@@ -4,6 +4,8 @@
 
 # VACA - Ambiente Virtual de Correção de Avaliação
 
+> **✅ Atualização importante SEMANA 12:** o ambiente completo (API, OMR, Web e infra de apoio) está subindo via `docker compose up -d` sem erros após as últimas correções. Basta seguir o passo a passo abaixo para reproduzir.
+
 Este é um projeto de microsserviços composto por três aplicações principais: API backend (vaca-api), serviço de OMR (vaca-omr) e interface web (vaca-web).
 
 ## 📋 Pré-requisitos

@@ -10,6 +10,11 @@ services:
       - postgresql_data:/var/lib/postgresql/data
     networks:
       - vaca-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB -h localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   localstack:
     container_name: vaca-localstack
@@ -23,6 +28,11 @@ services:
       - localstack_data:/var/lib/localstack/data
     networks:
       - vaca-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sfk https://localhost:4566/_localstack/health >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   redis:
     container_name: vaca-redis
@@ -33,6 +43,11 @@ services:
       - redis_data:/data
     networks:
       - vaca-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   vaca-api:
     container_name: vaca-api
@@ -56,8 +71,12 @@ services:
     networks:
       - vaca-network
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:11000/api/health >/dev/null"]
-      interval: 30s
+      test:
+        - CMD
+        - node
+        - -e
+        - "require('http').get('http://127.0.0.1:11000/api/health', res => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"
+      interval: 10s
       timeout: 5s
       retries: 5
     restart: unless-stopped
@@ -69,7 +88,7 @@ services:
       context: ./apps/vaca-omr
       target: development
     env_file:
-      - ./config/vaca-orm.env
+      - ./config/vaca-omr.env
     volumes:
       - ./apps/vaca-omr:/app
     ports:
@@ -79,6 +98,15 @@ services:
         condition: service_healthy
     networks:
       - vaca-network
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request, sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:11001/api/v1/health', timeout=2).status == 200 else 1)"
+      interval: 10s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
 
   vaca-web:
@@ -98,6 +126,15 @@ services:
         condition: service_healthy
     networks:
       - vaca-network
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "require('http').get('http://127.0.0.1:11002', res => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"
+      interval: 10s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
 
 networks:
