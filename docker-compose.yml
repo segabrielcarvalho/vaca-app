@@ -61,6 +61,7 @@ services:
       - ./apps/vaca-api:/app
     ports:
       - "11000:11000"
+      - "5555:5555"
     depends_on:
       database:
         condition: service_healthy
@@ -98,15 +99,6 @@ services:
         condition: service_healthy
     networks:
       - vaca-network
-    healthcheck:
-      test:
-        - CMD
-        - python
-        - -c
-        - "import urllib.request, sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:11001/api/v1/health', timeout=2).status == 200 else 1)"
-      interval: 10s
-      timeout: 5s
-      retries: 5
     restart: unless-stopped
 
   vaca-web:
@@ -126,15 +118,6 @@ services:
         condition: service_healthy
     networks:
       - vaca-network
-    healthcheck:
-      test:
-        - CMD
-        - node
-        - -e
-        - "require('http').get('http://127.0.0.1:11002', res => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"
-      interval: 10s
-      timeout: 5s
-      retries: 5
     restart: unless-stopped
 
 networks:
